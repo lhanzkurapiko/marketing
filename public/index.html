@@ -1,127 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Jzov Proofs</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LightPay</title>
 <style>
-body{
-  font-family: Arial, sans-serif;
-  background:white;
-  color:black;
-  margin:0;
-  padding:20px;
-}
-.container{max-width:500px;margin:auto;}
-input,textarea,button{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  border:1px solid black;
-  background:white;
-  color:black;
-}
-button{cursor:pointer}
-.card{
-  border:1px solid black;
-  padding:10px;
-  margin-bottom:15px;
-}
-img{width:100%;margin-top:10px}
-.small{font-size:12px}
-.hidden{display:none}
+body{margin:0;font-family:Arial;background:linear-gradient(135deg,#e0f2ff,#f3e8ff)}
+.screen{display:none;padding:20px;animation:fade .4s ease}
+.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card{background:#fff;border-radius:20px;padding:15px;box-shadow:0 5px 15px rgba(0,0,0,.1);margin-bottom:15px}
+.btn{width:100%;padding:12px;border:none;border-radius:12px;background:#6c63ff;color:#fff;margin-top:8px;
+transition:transform .15s ease,box-shadow .15s ease}
+.btn:active{transform:scale(.95);box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.input{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-top:8px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;justify-content:space-around;padding:10px}
+.dark{background:#111;color:#fff}
+.dark .card{background:#1e1e1e;color:#fff}
 </style>
 </head>
 <body>
 
-<div class="container">
-
-<h2>JZOVV PROOFS</h2>
-
-<!-- DASHBOARD -->
-<div id="dashboard"></div>
-
-<hr>
-
-<!-- ADMIN LOGIN -->
-<div id="loginBox">
-  <h3>Admin Panel</h3>
-  <input id="user" placeholder="Username">
-  <input id="pass" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
+<div id="login" class="screen active">
+  <h2>Create Account</h2>
+  <div class="card">
+    <input id="number" class="input" placeholder="Mobile Number">
+    <input id="pin" type="password" class="input" placeholder="PIN">
+    <button class="btn" onclick="createAccount()">Create</button>
+  </div>
 </div>
 
-<!-- ADMIN POST -->
-<div id="adminBox" class="hidden">
-  <h3>Post Proof</h3>
-  <textarea id="message" placeholder="Description / Message"></textarea>
-  <input type="file" id="image">
-  <button onclick="postProof()">Post</button>
-  <button onclick="logout()">Logout</button>
+<div id="home" class="screen">
+  <h2>LightPay</h2>
+  <div class="card"><p>Balance</p><h1 id="bal">₱0.00</h1></div>
+  <div class="card">
+    <button class="btn" onclick="sendMoney()">Send</button>
+    <button class="btn" onclick="cashIn()">Cash In</button>
+    <button class="btn" onclick="show('qr')">QR Pay</button>
+    <button class="btn" onclick="show('history')">History</button>
+    <button class="btn" onclick="show('profile')">Profile</button>
+    <button class="btn" onclick="toggleDark()">Dark</button>
+  </div>
 </div>
 
+<div id="qr" class="screen">
+  <h2>QR Pay</h2>
+  <div class="card">Scan QR (demo)</div>
+  <button class="btn" onclick="show('home')">Back</button>
 </div>
 
-<script>
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "admin123";
+<div id="history" class="screen">
+  <h2>Transactions</h2>
+  <div class="card" id="log"></div>
+  <button class="btn" onclick="show('home')">Back</button>
+</div>
 
-let proofs = JSON.parse(localStorage.getItem("proofs")) || [];
+<div id="profile" class="screen">
+  <h2>Profile</h2>
+  <div class="card">
+    <p id="pnum"></p>
+    <button class="btn" onclick="logout()">Logout</button>
+  </div>
+  <button class="btn" onclick="show('home')">Back</button>
+</div>
 
-function timeAgo(time){
-  const diff = Date.now() - time;
-  const days = Math.floor(diff / (1000*60*60*24));
-  if(days>0) return days+" day(s) ago";
-  const hrs = Math.floor(diff / (1000*60*60));
-  if(hrs>0) return hrs+" hour(s) ago";
-  return "Just now";
-}
+<div class="nav">
+  <button onclick="show('home')">Home</button>
+  <button onclick="show('login')">Account</button>
+</div>
 
-function render(){
-  const box = document.getElementById("dashboard");
-  box.innerHTML = "";
-  proofs.forEach(p=>{
-    box.innerHTML += `
-      <div class="card">
-        <div>${p.message}</div>
-        <img src="${p.image}">
-        <div class="small">${timeAgo(p.date)}</div>
-      </div>
-    `;
-  });
-}
-render();
-
-function login(){
-  if(user.value===ADMIN_USER && pass.value===ADMIN_PASS){
-    loginBox.classList.add("hidden");
-    adminBox.classList.remove("hidden");
-  } else alert("Wrong login");
-}
-
-function logout(){
-  adminBox.classList.add("hidden");
-  loginBox.classList.remove("hidden");
-}
-
-function postProof(){
-  const file = image.files[0];
-  if(!file || !message.value) return alert("Fill all fields");
-
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    proofs.unshift({
-      message: message.value,
-      image: reader.result,
-      date: Date.now()
-    });
-    localStorage.setItem("proofs", JSON.stringify(proofs));
-    message.value="";
-    image.value="";
-    render();
-  };
-  reader.readAsDataURL(file);
-}
-</script>
-
+<script src="index.js"></script>
 </body>
 </html>
